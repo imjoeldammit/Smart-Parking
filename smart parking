@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Parking System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      background: #1e293b;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .stats {
+      margin: 20px;
+      font-size: 18px;
+    }
+
+    .parking {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .slot {
+      width: 120px;
+      height: 120px;
+      background: #22c55e;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .slot:hover {
+      transform: scale(1.05);
+    }
+
+    .occupied {
+      background: #ef4444;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>🚗 Smart Parking System</header>
+
+<div class="stats">
+  Available Slots: <span id="available">6</span> / 6
+</div>
+
+<div class="parking" id="parking"></div>
+
+<button class="btn" onclick="resetParking()">Reset Parking</button>
+
+<script>
+  const parking = document.getElementById("parking");
+  const availableText = document.getElementById("available");
+
+  let totalSlots = 6;
+  let availableSlots = totalSlots;
+
+  function updateDisplay() {
+    availableText.innerText = availableSlots;
+  }
+
+  for (let i = 1; i <= totalSlots; i++) {
+    let slot = document.createElement("div");
+    slot.className = "slot";
+    slot.innerText = "Slot " + i;
+
+    slot.onclick = () => {
+      if (slot.classList.contains("occupied")) {
+        slot.classList.remove("occupied");
+        availableSlots++;
+      } else {
+        slot.classList.add("occupied");
+        availableSlots--;
+      }
+      updateDisplay();
+    };
+
+    parking.appendChild(slot);
+  }
+
+  function resetParking() {
+    const slots = document.querySelectorAll(".slot");
+    slots.forEach(slot => slot.classList.remove("occupied"));
+    availableSlots = totalSlots;
+    updateDisplay();
+  }
+
+  updateDisplay();
+</script>
+
+</body>
+</html>
