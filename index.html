@@ -1,128 +1,173 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Smart Parking System</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Smart Parking System Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      text-align: center;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+}
 
-    header {
-      padding: 20px;
-      font-size: 28px;
-      font-weight: bold;
-      background: #1e293b;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
+header {
+  padding: 20px;
+  font-size: 28px;
+  background: #020617;
+}
 
-    .stats {
-      margin: 20px;
-      font-size: 18px;
-    }
+.container {
+  padding: 20px;
+}
 
-    .parking {
-      display: grid;
-      grid-template-columns: repeat(3, 120px);
-      gap: 20px;
-      justify-content: center;
-      margin-top: 30px;
-    }
+.stats {
+  margin: 15px;
+  font-size: 18px;
+}
 
-    .slot {
-      width: 120px;
-      height: 120px;
-      background: #22c55e;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.parking {
+  display: grid;
+  grid-template-columns: repeat(3, 120px);
+  gap: 20px;
+  justify-content: center;
+  margin-top: 20px;
+}
 
-    .slot:hover {
-      transform: scale(1.05);
-    }
+.slot {
+  height: 120px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
 
-    .occupied {
-      background: #ef4444;
-    }
+.free { background: #22c55e; }
+.occupied { background: #ef4444; }
 
-    .btn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      border: none;
-      background: #3b82f6;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+.vip { border: 3px solid gold; }
+.disabled { border: 3px solid cyan; }
 
-    .btn:hover {
-      background: #2563eb;
-    }
-  </style>
+.controls {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+input {
+  padding: 8px;
+  margin-top: 10px;
+}
+</style>
 </head>
 
 <body>
 
-<header>🚗 Smart Parking System</header>
+<header>🚗 Smart Parking System PRO</header>
+
+<div class="container">
 
 <div class="stats">
-  Available Slots: <span id="available">6</span> / 6
+Available: <span id="available"></span> |
+Revenue: ₹<span id="revenue">0</span>
 </div>
+
+<input id="carInput" placeholder="Enter Car Number">
 
 <div class="parking" id="parking"></div>
 
-<button class="btn" onclick="resetParking()">Reset Parking</button>
+<div class="controls">
+<button onclick="reset()">Reset</button>
+</div>
+
+</div>
 
 <script>
-  const parking = document.getElementById("parking");
-  const availableText = document.getElementById("available");
+const parkingEl = document.getElementById("parking");
+const availableEl = document.getElementById("available");
+const revenueEl = document.getElementById("revenue");
 
-  let totalSlots = 6;
-  let availableSlots = totalSlots;
+let totalSlots = 6;
+let revenue = 0;
 
-  function updateDisplay() {
-    availableText.innerText = availableSlots;
+let slots = JSON.parse(localStorage.getItem("slots")) || [
+  {id:1,type:"normal",status:"free"},
+  {id:2,type:"vip",status:"free"},
+  {id:3,type:"disabled",status:"free"},
+  {id:4,type:"normal",status:"free"},
+  {id:5,type:"vip",status:"free"},
+  {id:6,type:"normal",status:"free"}
+];
+
+function render() {
+  parkingEl.innerHTML = "";
+  let available = 0;
+
+  slots.forEach(slot => {
+    let div = document.createElement("div");
+    div.className = "slot " + slot.status + " " + slot.type;
+
+    if(slot.status === "free") available++;
+
+    div.innerHTML = `
+      <b>Slot ${slot.id}</b>
+      <small>${slot.type.toUpperCase()}</small>
+      <small>${slot.car || ""}</small>
+    `;
+
+    div.onclick = () => handleClick(slot.id);
+
+    parkingEl.appendChild(div);
+  });
+
+  availableEl.innerText = available;
+  revenueEl.innerText = revenue;
+
+  localStorage.setItem("slots", JSON.stringify(slots));
+}
+
+function handleClick(id) {
+  let slot = slots.find(s => s.id === id);
+  let car = document.getElementById("carInput").value;
+
+  if(slot.status === "free") {
+    if(!car) return alert("Enter car number!");
+
+    slot.status = "occupied";
+    slot.car = car;
+    slot.start = Date.now();
+  } else {
+    let time = (Date.now() - slot.start) / 60000;
+    let cost = Math.ceil(time) * 10;
+
+    revenue += cost;
+
+    alert(`Car ${slot.car} parked for ${Math.ceil(time)} min\nCost: ₹${cost}`);
+
+    slot.status = "free";
+    slot.car = "";
   }
 
-  for (let i = 1; i <= totalSlots; i++) {
-    let slot = document.createElement("div");
-    slot.className = "slot";
-    slot.innerText = "Slot " + i;
+  render();
+}
 
-    slot.onclick = () => {
-      if (slot.classList.contains("occupied")) {
-        slot.classList.remove("occupied");
-        availableSlots++;
-      } else {
-        slot.classList.add("occupied");
-        availableSlots--;
-      }
-      updateDisplay();
-    };
+function reset() {
+  localStorage.clear();
+  location.reload();
+}
 
-    parking.appendChild(slot);
-  }
-
-  function resetParking() {
-    const slots = document.querySelectorAll(".slot");
-    slots.forEach(slot => slot.classList.remove("occupied"));
-    availableSlots = totalSlots;
-    updateDisplay();
-  }
-
-  updateDisplay();
+render();
 </script>
 
 </body>
